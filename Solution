@@ -1,0 +1,72 @@
+import java.util.*;
+
+public class Solution {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        if (!sc.hasNextInt()) return;
+        int t = sc.nextInt();
+
+        while (t-- > 0) {
+            int n = sc.nextInt();
+            int m = sc.nextInt();
+            
+            int[] parent = new int[n + 1];
+            long[] size = new long[n + 1];
+            for (int i = 1; i <= n; i++) {
+                parent[i] = i;
+                size[i] = 1;
+            }
+
+            int usefulEdges = 0;
+            for (int i = 0; i < m; i++) {
+                int u = sc.nextInt();
+                int v = sc.nextInt();
+                
+                int rootU = find(u, parent);
+                int rootV = find(v, parent);
+                
+                if (rootU != rootV) {
+                    parent[rootU] = rootV;
+                    size[rootV] += size[rootU];
+                    size[rootU] = 0;
+                    usefulEdges++;
+                }
+            }
+
+            List<Long> finalSizes = new ArrayList<>();
+            for (int i = 1; i <= n; i++) {
+                if (size[i] > 1) finalSizes.add(size[i]);
+            }
+            finalSizes.sort(Collections.reverseOrder());
+
+            long totalValue = 0;
+            long currentFriendship = 0;
+            int edgesAccountedFor = 0;
+
+            // Greedily build components
+            for (long s : finalSizes) {
+                for (int j = 2; j <= s; j++) {
+                    // Friendship in a group of size j is j*(j-1)
+                    // We subtract the previous state of this specific group (j-1)*(j-2)
+                    currentFriendship += (long) j * (j - 1) - (long) (j - 1) * (j - 2);
+                    totalValue += currentFriendship;
+                    edgesAccountedFor++;
+                }
+            }
+
+            // Remaining edges (redundant) keep the friendship at maximum
+            while (edgesAccountedFor < m) {
+                totalValue += currentFriendship;
+                edgesAccountedFor++;
+            }
+
+            System.out.println(totalValue);
+        }
+        sc.close();
+    }
+
+    private static int find(int i, int[] parent) {
+        if (parent[i] == i) return i;
+        return parent[i] = find(parent[i], parent);
+    }
+}
